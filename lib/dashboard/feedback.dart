@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-
 import 'package:pantau_pro/register/Home_page.dart';
 
 void main() {
@@ -14,7 +13,8 @@ class FeedbackPage extends StatelessWidget {
   final TextEditingController _messageController = TextEditingController();
 
   Future<void> sendFeedback() async {
-    var url = Uri.parse('http://localhost:8000/api/feedback_flutter'); // Sesuaikan URL dengan endpoint Anda
+    var url = Uri.parse(
+        'http://localhost:8000/api/feedback_flutter'); // Sesuaikan URL dengan endpoint Anda
     var body = jsonEncode({
       'keterangan': _messageController.text,
     });
@@ -69,10 +69,9 @@ class FeedbackPage extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => HomePage()),
-                      );
+                  context,
+                  MaterialPageRoute(builder: (context) => HomePage()),
+                );
                 sendFeedback(); // Panggil fungsi sendFeedback
                 _showFeedbackSentSnackbar(context);
                 // Tidak perlu dipop navigator karena tidak ada navigasi lain yang didefinisikan di sini

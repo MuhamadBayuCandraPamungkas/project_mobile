@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:pantau_pro/register/Home_page.dart';
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
+// Kelas KunjunganPage sebagai StatefulWidget
 class KunjunganPage extends StatefulWidget {
   const KunjunganPage({Key? key}) : super(key: key);
 
@@ -8,27 +11,21 @@ class KunjunganPage extends StatefulWidget {
   _KunjunganPageState createState() => _KunjunganPageState();
 }
 
+// State dari KunjunganPage
 class _KunjunganPageState extends State<KunjunganPage> {
+  // Deklarasi variabel TextEditingController
   final TextEditingController _namaController = TextEditingController();
   final TextEditingController _alamatController = TextEditingController();
   final TextEditingController _tujuanController = TextEditingController();
   final TextEditingController _perusahaanController = TextEditingController();
   final TextEditingController _kontakController = TextEditingController();
-  final TextEditingController _pihakController = TextEditingController();
+  final TextEditingController _ketController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   TimeOfDay _selectedTime = TimeOfDay.now();
-  bool _namaIsFilled = true;
-  bool _alamatIsFilled = true;
-  bool _tujuanIsFilled = true;
-  bool _perusahaanIsFilled = true;
-  bool _kontakIsFilled = true;
-  bool _pihakIsSelected = true;
-
-  // Variabel untuk menyimpan nilai dropdown departemen dan seksi yang dipilih
   String _selectedDepartemen = 'keuangan';
   String _selectedSeksi = 'kurikulum/penilaian';
 
-  // List pilihan untuk departemen dan seksi
+  // Opsi untuk dropdown Departemen dan Seksi
   List<String> departemenOptions = [
     'keuangan',
     'ketenagakerjaan',
@@ -46,6 +43,58 @@ class _KunjunganPageState extends State<KunjunganPage> {
     'pendidik_smp',
     'lainnya'
   ];
+
+  // Metode untuk mengirimkan form
+  Future<void> _submitForm() async {
+    final String apiUrl = 'http://localhost:8000/api/vip_flutter';
+
+    Map<String, dynamic> data = {
+      'nama': _namaController.text,
+      'alamat': _alamatController.text,
+      'keperluan': _tujuanController.text,
+      'asal_instansi': _perusahaanController.text,
+      'no_hp': _kontakController.text,
+      'tanggal': _selectedDate.toIso8601String(),
+      'jam': _selectedTime.format(context),
+      'departemen': _selectedDepartemen,
+      'seksi': _selectedSeksi,
+      'status': 'pending', // Atur status menjadi "pending"
+      'ket': _ketController.text,
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(data),
+      );
+
+      if (response.statusCode == 201) {
+        final responseData = json.decode(response.body);
+        final successMessage = responseData['message'];
+        showSnackBar(successMessage);
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      } else {
+        // Handle non-JSON response
+        showSnackBar('Terjadi kesalahan saat menyimpan data');
+      }
+    } catch (e) {
+      print('Error: $e');
+      showSnackBar('Terjadi kesalahan saat menyimpan data');
+    }
+  }
+
+  // Menampilkan snackbar
+  void showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,57 +125,32 @@ class _KunjunganPageState extends State<KunjunganPage> {
                         controller: _namaController,
                         labelText: 'Nama *',
                         hintText: 'Masukkan nama',
-                        onChanged: (value) {
-                          setState(() {
-                            _namaIsFilled = value.isNotEmpty;
-                          });
-                        },
-                        isFilled: _namaIsFilled,
                       ),
                       _buildTextField(
                         controller: _alamatController,
                         labelText: 'Alamat *',
                         hintText: 'Masukkan alamat',
-                        onChanged: (value) {
-                          setState(() {
-                            _alamatIsFilled = value.isNotEmpty;
-                          });
-                        },
-                        isFilled: _alamatIsFilled,
                       ),
                       _buildTextField(
                         controller: _tujuanController,
                         labelText: 'Tujuan Kunjungan *',
                         hintText: 'Masukkan tujuan kunjungan',
-                        onChanged: (value) {
-                          setState(() {
-                            _tujuanIsFilled = value.isNotEmpty;
-                          });
-                        },
-                        isFilled: _tujuanIsFilled,
                       ),
                       _buildTextField(
                         controller: _perusahaanController,
                         labelText: 'Asal Instansi *',
                         hintText: 'Masukkan nama Instansi',
-                        onChanged: (value) {
-                          setState(() {
-                            _perusahaanIsFilled = value.isNotEmpty;
-                          });
-                        },
-                        isFilled: _perusahaanIsFilled,
                       ),
                       _buildTextField(
                         controller: _kontakController,
                         labelText: 'Nomor Telepon *',
                         hintText: 'Masukkan Nomor Telepon',
-                        onChanged: (value) {
-                          setState(() {
-                            _kontakIsFilled = value.isNotEmpty;
-                          });
-                        },
-                        isFilled: _kontakIsFilled,
                         keyboardType: TextInputType.phone,
+                      ),
+                      _buildTextField(
+                        controller: _ketController,
+                        labelText: 'Keterangan *',
+                        hintText: 'Masukkan keterangan',
                       ),
                       _buildDropdown(
                         labelText: 'Departemen *',
@@ -230,17 +254,7 @@ class _KunjunganPageState extends State<KunjunganPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {
-                            // Validate form before navigating
-                            if (_validateForm()) {
-                              // Navigate to home page if form is complete
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => HomePage()),
-                              );
-                            }
-                          },
+                          onPressed: _submitForm,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
                             padding: const EdgeInsets.symmetric(vertical: 15),
@@ -272,9 +286,6 @@ class _KunjunganPageState extends State<KunjunganPage> {
     required TextEditingController controller,
     required String labelText,
     required String hintText,
-    required ValueChanged<String> onChanged,
-    required bool isFilled,
-    bool readOnly = false,
     TextInputType keyboardType = TextInputType.text,
   }) {
     return Column(
@@ -291,8 +302,6 @@ class _KunjunganPageState extends State<KunjunganPage> {
         const SizedBox(height: 10),
         TextFormField(
           controller: controller,
-          onChanged: onChanged,
-          readOnly: readOnly,
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hintText,
@@ -300,7 +309,6 @@ class _KunjunganPageState extends State<KunjunganPage> {
             border: const OutlineInputBorder(),
             filled: true,
             fillColor: Colors.white,
-            errorText: isFilled ? null : '$labelText harus diisi!',
           ),
         ),
         const SizedBox(height: 20),
@@ -339,22 +347,6 @@ class _KunjunganPageState extends State<KunjunganPage> {
         const SizedBox(height: 20),
       ],
     );
-  }
-
-  bool _validateForm() {
-    _namaIsFilled = _namaController.text.isNotEmpty;
-    _alamatIsFilled = _alamatController.text.isNotEmpty;
-    _tujuanIsFilled = _tujuanController.text.isNotEmpty;
-    _perusahaanIsFilled = _perusahaanController.text.isNotEmpty;
-    _kontakIsFilled = _kontakController.text.isNotEmpty;
-
-    setState(() {});
-
-    return _namaIsFilled &&
-        _alamatIsFilled &&
-        _tujuanIsFilled &&
-        _perusahaanIsFilled &&
-        _kontakIsFilled;
   }
 
   Future<void> _selectDate(BuildContext context) async {
