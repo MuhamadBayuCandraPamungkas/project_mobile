@@ -6,6 +6,17 @@ void main() {
   runApp(const EditProfilePage());
 }
 
+class editprofile extends StatelessWidget {
+  const editprofile({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: const EditProfilePage(),
+    );
+  }
+}
+
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
 
@@ -17,31 +28,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
   late Future<UserData> _userDataFuture;
 
   @override
+  void initState() {
+    super.initState();
+    _userDataFuture = fetchUserData();
+  }
+
+  Future<UserData> fetchUserData() async {
+    final response =
+        await http.get(Uri.parse('http://localhost:8000/api/register_flutter'));
+
+    if (response.statusCode == 200) {
+      return UserData.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to load user data');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Profile'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context); // Kembali ke halaman sebelumnya
-            },
-          ),
-        ),
-        body: FutureBuilder<UserData>(
-          future: _userDataFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            } else {
-              UserData userData = snapshot.data!;
-              return EditProfileForm(userData: userData);
-            }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Profile'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // Go back to the previous screen
           },
         ),
+      ),
+      body: FutureBuilder<UserData>(
+        future: _userDataFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else {
+            UserData userData = snapshot.data!;
+            return EditProfileForm(userData: userData);
+          }
+        },
       ),
     );
   }
@@ -66,7 +92,7 @@ class EditProfileForm extends StatelessWidget {
           const SizedBox(height: 20.0),
           ElevatedButton(
             onPressed: () {
-              // Tambahkan logika untuk menyimpan data
+              // Add logic to save data
               print('Data saved!');
             },
             child: const Text('Simpan'),

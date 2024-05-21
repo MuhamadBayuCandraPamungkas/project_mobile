@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:pantau_pro/register/Home_page.dart';
 import 'package:pantau_pro/register/login.dart';
 import 'package:pantau_pro/register/register.dart';
+import 'package:pantau_pro/view/landing.dart';
+import 'package:pantau_pro/view/pageview.dart';
 
 void main() {
   runApp(const MyApp());
@@ -61,7 +63,7 @@ class _SplashScreenState extends State<SplashScreen>
     _animationController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => HomePage()),
+          MaterialPageRoute(builder: (_) => landingpage()),
         );
       }
     });
@@ -78,11 +80,7 @@ class _SplashScreenState extends State<SplashScreen>
         width: screenWidth,
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFF55552B), // Warna yang diinginkan
-              Color(
-                  0xFF55552B), // Warna yang diinginkan (jika ingin satu warna saja)
-            ],
+            colors: [Colors.blue.shade900, Colors.blue.shade400],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             stops: [0.0, 1.0],
